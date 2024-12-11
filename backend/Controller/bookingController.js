@@ -18,7 +18,9 @@ const createBooking = async (req, res) => {
 // **GET**: Retrieve all bookings
 const getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find().populate('userId').populate('packageId'); // Populate user and package details
+    const bookings = await Booking.find()
+      .populate('userId', 'name email') // Populate user details (select specific fields)
+      .populate('packageId', 'name description'); // Populate package details (select specific fields)
     res.status(200).json(bookings);
   } catch (error) {
     res.status(500).json({ error: 'Error retrieving bookings: ' + error.message });
@@ -29,7 +31,9 @@ const getAllBookings = async (req, res) => {
 const getBookingById = async (req, res) => {
   try {
     const { id } = req.params;
-    const booking = await Booking.findById(id).populate('userId').populate('packageId');
+    const booking = await Booking.findById(id)
+      .populate('userId', 'name email') // Populate user details
+      .populate('packageId', 'name description'); // Populate package details
 
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
