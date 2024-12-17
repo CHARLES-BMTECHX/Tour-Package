@@ -6,6 +6,8 @@ const {
   loginUser,
   updateUser,
   deleteUser,
+  forgotPassword,
+  resetPassword
 } = require('../Controller/userController'); 
 const authenticateToken = require('../Middleware/jsonwebtokenMiddleware'); // Import authentication middleware
 
@@ -18,5 +20,7 @@ router.post('/register', createUser); // Create a new user (public, no auth requ
 router.put('/:id', authenticateToken, updateUser); // Update a user by ID
 router.delete('/:id', authenticateToken, deleteUser); // Delete a user by ID
 router.post('/login', loginUser); // Login route does not require authentication
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 module.exports = router;

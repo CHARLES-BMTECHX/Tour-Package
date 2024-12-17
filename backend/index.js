@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+// const nodemailer = require("nodemailer");
+const bodyParser = require("body-parser");
 
 // Import routes
 const userRoutes = require('./Routes/userRoutes');
@@ -10,6 +12,8 @@ const themesRoutes = require('./Routes/themesRoutes');
 const packageRoutes = require('./Routes/packageRoutes');
 const bookingRoutes = require('./Routes/bookingRoutes');
 const paymentRoutes = require('./Routes/paymentRoutes');
+const addressRoutes=require('./Routes/addressRoutes');
+const reviewRoutes=require('./Routes/reviewRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -19,9 +23,11 @@ const app = express();
 
 // Middleware
 app.use(cors()); // Enable CORS
+app.use(bodyParser.json());
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 app.use(morgan('dev')); // Log HTTP requests
+
 
 // Connect to MongoDB Atlas
 const mongoURI = process.env.MONGODB_URL;
@@ -46,6 +52,8 @@ app.use('/api/themes', themesRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api', paymentRoutes);
+app.use('/api/address', addressRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Static folder for uploaded files
 app.use('/uploads', express.static('uploads'));

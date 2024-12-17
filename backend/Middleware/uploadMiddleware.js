@@ -5,8 +5,13 @@ const fs = require('fs');
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const packageName = req.body.name.replace(/\s+/g, '-').toLowerCase(); // Use package name to create folder
-    const packageDir = path.join(__dirname, `../uploads/packages/${packageName}`); // Folder for each package
+    // Sanitize package name
+    const packageName = req.body.name
+      .replace(/[<>:"/\\|?*\s]+/g, '-') // Replace invalid characters and spaces with hyphens
+      .toLowerCase();
+
+    // Define the package-specific folder
+    const packageDir = path.join(__dirname, `../uploads/packages/${packageName}`);
 
     // Create the folder if it doesn't exist
     fs.mkdirSync(packageDir, { recursive: true });
@@ -15,7 +20,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`); // Format filename
+    cb(null, `${uniqueSuffix}-${file.originalname}`); // Format filename with timestamp and original name
   },
 });
 

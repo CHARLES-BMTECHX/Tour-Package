@@ -1,7 +1,20 @@
 const User = require('../Models/usersModel');
+const nodemailer = require("nodemailer");
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require("crypto");
 
+const transporter = nodemailer.createTransport({
+  // service: "Gmail",
+  host:"smtp.gmail.com",
+  secure:true,
+  port:465,
+  auth: {
+    user: "charles.bmtechx@gmail.com",
+    pass: "shibjhookhqqaazz",
+  },
+});
 // **GET**: Retrieve all users
 const getAllUsers = async (req, res) => {
   try {
@@ -28,61 +41,64 @@ const getUserById = async (req, res) => {
 // **POST**: Create a new user
 const createUser = async (req, res) => {
   try {
+    console.log("Request received:", req.body);
+
     const { username, email, phoneNumber, password, confirmPassword, role } = req.body;
 
     // Validate required fields
     if (!username || !email || !phoneNumber || !password || !confirmPassword) {
-      return res.status(400).json({ message: 'All fields are required' });
+      console.log("Validation failed: Missing fields");
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     // Check if passwords match
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: 'Passwords do not match' });
+      console.log("Validation failed: Passwords do not match");
+      return res.status(400).json({ message: "Passwords do not match" });
     }
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'Email already exists' });
+      console.log("Validation failed: Email already exists");
+      return res.status(400).json({ message: "Email already exists" });
     }
 
     // Generate token
-    const token = jwt.sign({ email, role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ email, role }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    console.log("Generated token:", token);
 
-    // Create a new user (password will be hashed by pre('save') middleware)
+    // Create a new user
     const newUser = new User({
       username,
       email,
       phoneNumber,
-      password, // Plain password
+      password,
       role,
-      token, // Store the token in the document
+      token,
     });
 
-    // Save the user to the database
+    // Save the user
     await newUser.save();
+    console.log("User saved:", newUser);
 
     // Respond with success
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user: {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
         phoneNumber: newUser.phoneNumber,
         role: newUser.role,
-        token: newUser.token, // Return the token
+        token: newUser.token,
       },
     });
   } catch (err) {
-    // Handle validation and other errors
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ message: err.message });
-    }
-    res.status(500).json({ message: 'Server error. Please try again later.' });
+    console.error("Error in createUser:", err);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
-
 
 // **PUT**: Update a user by ID
 const updateUser = async (req, res) => {
@@ -119,8 +135,6 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Error deleting user: ' + error.message });
   }
 };
-
-
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -148,7 +162,7 @@ const loginUser = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id, role: user.role ,email:user.email,username:user.username,phoneNumber:user.phoneNumber}, process.env.JWT_SECRET, {
       expiresIn: '30d',
     });
 
@@ -158,22 +172,80 @@ const loginUser = async (req, res) => {
     res.status(200).json({
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
+      // user: {
+      //   id: user._id,
+      //   username: user.username,
+      //   email: user.email,
+      //   role: user.role,
+      // },
     });
   } catch (err) {
     console.error('Login Error:', err.message);
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 };
+  const forgotPassword= async (req,res)=>{
+    try {
+      const { email } = req.body;
+
+      // Check if the user exists
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate a reset token
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      user.token = resetToken; // Save the token in the database
+      await user.save();
+
+      // Generate reset link
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+      // Send email with reset link
+      const mailOptions = {
+        from: "charles.bmtechx@gmail.com",
+        to: email,
+        subject: "Password Reset Request",
+        html: `
+          <h3>Password Reset Request</h3>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetLink}">Reset Password</a>
+          <p>If you did not request this, please ignore this email.</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      res.status(200).json({ message: "Password reset link sent to your email." });
+    } catch (error) {
+      console.error("Error in forgotPassword:", error);
+      res.status(500).json({ message: "An error occurred. Please try again later." });
+    }
+  };
+const resetPassword =async (req,res)=>{
+  try {
+    const { token, newPassword } = req.body;
+
+    // Find user by reset token
+    const user = await User.findOne({ token });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    // Update the password
+    user.password = newPassword; // Hash the password before saving in a real application
+    user.token = null; // Clear the reset token
+    await user.save();
+
+    res.status(200).json({ message: "Password has been reset successfully." });
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    res.status(500).json({ message: "An error occurred. Please try again later." });
+  }
+};
 
 // module.exports = loginUser;
-
-
 
 module.exports = {
   getAllUsers,
@@ -182,4 +254,6 @@ module.exports = {
   loginUser,
   updateUser,
   deleteUser,
+  forgotPassword,
+  resetPassword
 };
