@@ -5,12 +5,22 @@ import {
   faCaretDown,
   faCaretUp,
   faUserCircle,
-  faSignOutAlt 
+  faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import logo from "../images/logo.png"; // Replace with your logo path
+import logo from '../images/logo.png'
+import { useUser } from "../hooks/UserContext";
 
 const Navbar = () => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [profile, setPfofile] = useState(false);
+
+  const toggleDropdown = () => {
+    setDropdownOpen((prevState) => !prevState); // Toggle dropdown state
+  };
+  const toggleProfile = () => {
+    setPfofile((prevState) => !prevState); // Toggle dropdown state
+  };
+  const { user, logout } = useUser(); // Access user and logout from context
 
   const handleMouseEnter = () => setDropdownOpen(true);
   const handleMouseLeave = () => setDropdownOpen(false);
@@ -29,12 +39,13 @@ const Navbar = () => {
   const internationalDestinations = destinations.filter(
     (dest) => dest.country !== "India"
   );
+
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light border-bottom"
       style={{
         backgroundColor: "white",
-        boxShadow:"rgba(100, 100, 111, 0.2) 0px 7px 29px 0px"
+        boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
       }}
     >
       <div className="container">
@@ -112,7 +123,12 @@ const Navbar = () => {
               >
                 {/* Domestic Packages Section */}
                 <li>
-                  <h6 className="dropdown-header" style={{color:'rgba(40, 41, 65, 1)'}}>Domestic Packages</h6>
+                  <h6
+                    className="dropdown-header"
+                    style={{ color: "rgba(40, 41, 65, 1)" }}
+                  >
+                    Domestic Packages
+                  </h6>
                 </li>
                 {domesticDestinations.map((dest, index) => (
                   <li key={index}>
@@ -133,7 +149,12 @@ const Navbar = () => {
 
                 {/* International Packages Section */}
                 <li>
-                  <h6 className="dropdown-header" style={{color:'rgba(40, 41, 65, 1)'}}>International Packages</h6>
+                  <h6
+                    className="dropdown-header"
+                    style={{ color: "rgba(40, 41, 65, 1)" }}
+                  >
+                    International Packages
+                  </h6>
                 </li>
                 {internationalDestinations.map((dest, index) => (
                   <li key={index}>
@@ -181,50 +202,60 @@ const Navbar = () => {
             </li>
             {/* User Profile Icon with Dropdown */}
             <li className="nav-item dropdown">
-              <Link
-                className="nav-link dropdown-toggle text-dark d-flex align-items-center"
-                to="#"
-                id="userDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+              {/* Dropdown Trigger */}
+              <button
+                className="nav-link dropdown-toggle text-dark d-flex align-items-center bg-transparent border-0"
+                onClick={toggleProfile} // Control visibility with state
+                aria-expanded={profile ? "true" : "false"}
               >
                 <FontAwesomeIcon icon={faUserCircle} className="fs-3 me-1" />
-                <FontAwesomeIcon icon={faCaretDown} className="ms-2" />
-              </Link>
+                {user ? user.name : "Guest"}
+                <FontAwesomeIcon
+                  icon={profile ? faCaretUp : faCaretDown}
+                  className="ms-2"
+                />
+              </button>
 
               {/* Dropdown Menu */}
               <ul
-                className="dropdown-menu dropdown-menu-end shadow"
-                aria-labelledby="userDropdown"
+                className={`dropdown-menu dropdown-menu-end shadow ${
+                  profile ? "show" : ""
+                }`}
               >
-                <li>
-                  <Link className="dropdown-item hover-underline" to="/sign_in">
-                    Sign In
-                  </Link>
-                </li>
-                <li>
-                  <Link className="dropdown-item hover-underline" to="/sign_up">
-                    Sign Up
-                  </Link>
-                </li>
-                <li>
-                  <Link className="dropdown-item hover-underline" to="/profile">
-                    My Profile
-                  </Link>
-                </li>
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
-                <li>
-                  <Link
-                    className="dropdown-item text-danger hover-underline d-flex align-items-center"
-                    to="/sign_in"
-                  >
-                    <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
-                    Logout
-                  </Link>
-                </li>
+                {user ? (
+                  <>
+                    <li>
+                      <Link className="dropdown-item" to="/profile">
+                        My Profile
+                      </Link>
+                    </li>
+                    <li>
+                      <hr className="dropdown-divider" />
+                    </li>
+                    <li>
+                      <button
+                        className="dropdown-item text-danger d-flex align-items-center"
+                        onClick={logout}
+                      >
+                        <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+                        Logout
+                      </button>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <Link className="dropdown-item" to="/sign_in">
+                        Sign In
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className="dropdown-item" to="/sign_up">
+                        Sign Up
+                      </Link>
+                    </li>
+                  </>
+                )}
               </ul>
             </li>
           </ul>

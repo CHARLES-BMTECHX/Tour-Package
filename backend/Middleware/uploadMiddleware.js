@@ -23,7 +23,6 @@ const storage = multer.diskStorage({
     cb(null, `${uniqueSuffix}-${file.originalname}`); // Format filename with timestamp and original name
   },
 });
-
 // File filter to allow only images
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
@@ -32,12 +31,11 @@ const fileFilter = (req, file, cb) => {
     cb(new Error('Only image files are allowed!'), false); // Reject non-image files
   }
 };
-
 // Multer instance
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB per image
+  // limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB per image
 });
 
 module.exports = upload;

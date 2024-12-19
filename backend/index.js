@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 // const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
+const path =require('path');
 
 // Import routes
 const userRoutes = require('./Routes/userRoutes');
@@ -56,7 +57,7 @@ app.use('/api/address', addressRoutes);
 app.use('/api/reviews', reviewRoutes);
 
 // Static folder for uploaded files
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads/packages"));
 
 // Root endpoint
 app.get('/', (req, res) => {

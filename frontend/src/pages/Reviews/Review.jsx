@@ -162,18 +162,13 @@ const Review = () => {
       <div className="d-flex justify-content-center mt-4 gap-3">
         {hasMore && (
           <button
-            className="btn btn-primary"
+            className="btn "
             onClick={handleReadMore}
+            style={{border:'2px solid #ef156c',color:'#ef156c'}}
           >
             Read More Reviews
           </button>
         )}
-        <button
-          className="btn btn-success"
-          onClick={handleWriteReview}
-        >
-          Write Review
-        </button>
       </div>
     </div>
   );

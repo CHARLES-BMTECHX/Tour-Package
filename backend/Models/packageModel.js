@@ -42,43 +42,21 @@ const packageSchema = new mongoose.Schema(
       default: ["normal"], // Default value set to ["normal"]
       enum: ["normal", "trending", "top destination"], // Restricts values to these options
     },
-    locationDetails: {
-      country: {
-        type: String,
-        required: [true, 'Country is required'],
-      },
-      state: {
-        type: String,
-        required: [true, 'State is required'],
-      },
-      city: {
-        type: String,
-        required: [true, 'City is required'],
-      },
-      description: {
-        type: String,
-        required: [true, 'Description is required'],
-      },
-      startingPrice: {
-        type: Number,
-        required: [true, 'Starting price is required'],
-      },
-      tourType: {
-        type: String,
-        enum: ['Domestic', 'International'], // Restricted to these two values
-        required: [true, 'Tour type is required'],
-      },
+    addressId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Address', // Reference to the Address model
+      required: [true, 'Address ID is required'],
     },
     bestMonth: {
       type: String,
       required: [true, 'Best month is required'],
-      validate: {
-        validator: function (value) {
-          // Regex to match format like "December, 2024"
-          return /^[A-Za-z]+,\s\d{4}$/.test(value);
-        },
-        message: 'Best month must be in the format "Month, YYYY"',
-      },
+      // validate: {
+      //   validator: function (value) {
+      //     // Regex to match format like "December, 2024"
+      //     return /^[A-Za-z]+,\s\d{4}$/.test(value);
+      //   },
+      //   message: 'Best month must be in the format "Month, YYYY"',
+      // },
     },
   },
   { timestamps: true } // Automatically adds createdAt and updatedAt fields

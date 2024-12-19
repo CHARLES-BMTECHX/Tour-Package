@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -13,6 +13,9 @@ import {
   Alert,
 } from "@mui/material";
 import axios from "axios";
+import { useUser } from "../../hooks/UserContext";
+import {jwtDecode} from "jwt-decode";
+
 
 const WriteReview = () => {
   const [formData, setFormData] = useState({
@@ -21,10 +24,36 @@ const WriteReview = () => {
     name: "",
     email: "",
     orderId: "",
+    userId: "675967cbf1c99091fbc0dd89", // Default userId = 1
     comments: "",
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const secretKey = "userData"; // Token key in sessionStorage
+
+  // Extract userId from token on component load
+  useEffect(() => {
+    const token = sessionStorage.getItem(secretKey);
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded.userId) {
+          setFormData((prevData) => ({
+            ...prevData,
+            userId: decoded.userId, // Set userId from token
+          }));
+        }
+        // Check if the token is expired
+        if (decoded.exp * 1000 < Date.now()) {
+          console.log("Token has expired.");
+          sessionStorage.removeItem(secretKey);
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error.message);
+      }
+    }
+  }, []);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -41,7 +70,7 @@ const WriteReview = () => {
 
     try {
       const baseurl = import.meta.env.VITE_BASE_URL; // Replace with your base URL
-      await axios.post(`${baseurl}/reviews`, formData);
+      await axios.post(`${baseurl}/reviews/`, formData);
 
       setMessage("Review submitted successfully!");
       setError("");
@@ -51,6 +80,7 @@ const WriteReview = () => {
         name: "",
         email: "",
         orderId: "",
+        userId: "675967cbf1c99091fbc0dd89", // Reset to default userId
         comments: "",
       });
     } catch (error) {
@@ -173,7 +203,7 @@ const WriteReview = () => {
               type="submit"
               variant="contained"
               fullWidth
-              sx={{ py: 1.5 , backgroundColor:"rgba(40, 41, 65, 1)",color:'white'}}
+              sx={{ py: 1.5, backgroundColor: "rgba(40, 41, 65, 1)", color: "white" }}
             >
               Submit Review
             </Button>

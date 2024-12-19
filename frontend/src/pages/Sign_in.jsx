@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle, faFacebook } from "@fortawesome/free-brands-svg-icons";
 import sign_in from "../images/sign-in.jpg";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import { TextField, Button, Box, Grid, FormHelperText } from "@mui/material";
 import axios from "axios";
+import { useUser } from "../hooks/UserContext"; // Import the useUser hook
 
 const Sign_in = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +14,10 @@ const Sign_in = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [alert, setAlert] = useState({ message: "", type: "", visible: false }); // State for alert
+  const [alert, setAlert] = useState({ message: "", type: "", visible: false });
   const navigate = useNavigate();
+
+  const { login } = useUser(); // Use login function from UserContext
 
   // Validation functions
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -61,16 +64,18 @@ const Sign_in = () => {
       const response = await axios.post(`${baseUrl}/users/login`, formData);
       console.log("Response Data:", response.data);
 
+      // Use login function from context to set user globally
+      login(response.data.token);
+
       setAlert({
         message: "Sign-in successful!",
         type: "success",
         visible: true,
       });
-      sessionStorage.setItem("userData",JSON.stringify(response.data.token));
-      
+
       setTimeout(() => {
         navigate("/"); // Navigate to the home page
-      }, 2000); // Add a small delay before redirect
+      }, 2000);
     } catch (error) {
       console.error("Error during sign-in:", error);
       setAlert({
@@ -106,17 +111,7 @@ const Sign_in = () => {
       )}
 
       <Grid container spacing={2} className="shadow-lg" sx={{ padding: 4, borderRadius: 2 }}>
-        {/* Left Column - Sign-In Form */}
-        <Grid
-          item
-          xs={12}
-          md={6}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
+        <Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <Box sx={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
             <h3 className="text-center mb-4">SIGN IN</h3>
             <Button
@@ -139,7 +134,6 @@ const Sign_in = () => {
             </Button>
             <form onSubmit={handleSubmit}>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {/* Email Field */}
                 <div>
                   <TextField
                     label="Email ID"
@@ -154,8 +148,6 @@ const Sign_in = () => {
                     <FormHelperText error>{errors.email}</FormHelperText>
                   )}
                 </div>
-
-                {/* Password Field */}
                 <div>
                   <TextField
                     label="Password"
@@ -170,10 +162,11 @@ const Sign_in = () => {
                     <FormHelperText error>{errors.password}</FormHelperText>
                   )}
                 </div>
-                  <div>
-                    <Link to="/forgot_password" className="text-primary">Forgot Password !</Link>
-                  </div>
-                {/* Submit Button */}
+                <div>
+                  <Link to="/forgot_password" className="text-primary">
+                    Forgot Password !
+                  </Link>
+                </div>
                 <Button
                   type="submit"
                   variant="contained"
@@ -183,9 +176,7 @@ const Sign_in = () => {
                     backgroundColor: "rgba(40, 41, 65, 1)",
                     color: "white",
                     mt: 2,
-                    "&:disabled": {
-                      backgroundColor: "#ccc",
-                    },
+                    "&:disabled": { backgroundColor: "#ccc" },
                   }}
                 >
                   Sign In
@@ -194,39 +185,14 @@ const Sign_in = () => {
             </form>
           </Box>
         </Grid>
-
-        {/* Right Column - Image */}
-        <Grid
-          item
-          xs={12}
-          md={6}
-          sx={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "flex-start",
-            position: "relative",
-          }}
-        >
+        <Grid item xs={12} md={6} sx={{ position: "relative" }}>
           <img
             src={sign_in}
             alt="Sign-In Visual"
             className="img-fluid rounded"
-            style={{
-              zIndex: -1,
-              width: "100%",
-              height: "90vh",
-              objectFit: "cover",
-            }}
+            style={{ width: "100%", height: "90vh", objectFit: "cover" }}
           />
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              color: "white",
-              zIndex: 1,
-            }}
-          >
+          <Box sx={{ position: "absolute", bottom: 20, left: 20, color: "white" }}>
             <h1>Welcome to Sign_In</h1>
             <p>
               Don't have an account?{" "}

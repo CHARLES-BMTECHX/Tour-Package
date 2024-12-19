@@ -5,23 +5,31 @@ const {
   getThemeById,
   updateTheme,
   deleteTheme,
+  getImageByPath,
+  getImageByQuery,
 } = require('../Controller/themesController');
 
 const router = express.Router();
 
 // Route to create a new theme
-router.post('/', createTheme);
+router.post('/create-theme', createTheme);
 
 // Route to get all themes
-router.get('/', getAllThemes);
+router.get('/get-all-themes', getAllThemes);
 
 // Route to get a theme by ID
-router.get('/:id', getThemeById);
+router.get('/get-theme-by-id/:id', getThemeById);
 
-// Route to update a theme by ID
-router.put('/:id', updateTheme);
+// Route to update a theme
+router.put('/update-theme', updateTheme);
 
 // Route to delete a theme by ID
-router.delete('/:id', deleteTheme);
+router.delete('/delete-theme/:id', deleteTheme);
+
+// Route to get an image by themeName and fileName (query parameters)
+router.get('/get-image-by-query', getImageByQuery);
+
+// Route to get an image by themeName and fileName (path parameters)
+router.get('/get-image-by-path/:themeName/:fileName', getImageByPath);
 
 module.exports = router;

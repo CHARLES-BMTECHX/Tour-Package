@@ -1,17 +1,31 @@
 const express = require("express");
 const {
+  createAddress,
   getAllAddresses,
   getAddressByFilters,
-  createAddress,
   updateAddress,
   deleteAddress,
+  getImage,
 } = require("../Controller/addressController");
 
 const router = express.Router();
-router.get("/", getAllAddresses);
+
+// Create a new address with dynamic image upload
+router.post("/create", createAddress);
+
+// Get all addresses
+router.get("/all", getAllAddresses);
+
+// Get addresses by filters
 router.get("/filter", getAddressByFilters);
-router.post("/", createAddress);
-router.patch("/:id", updateAddress);
-router.delete("/:id", deleteAddress);
+
+// Update an address by ID
+router.put("/update/:id", updateAddress);
+
+// Delete an address by ID
+router.delete("/delete/:id", deleteAddress);
+
+// Serve an image by state name and file name
+router.get("/image", getImage);
 
 module.exports = router;

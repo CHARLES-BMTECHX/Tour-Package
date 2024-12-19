@@ -296,7 +296,7 @@ const Sign_up = () => {
             alt="Signup Visual"
             className="img-fluid rounded"
             sx={{
-              zIndex: -1,
+              // zIndex: -1,
               width: "100%",
               height: "90vh",
               objectFit: "cover",
