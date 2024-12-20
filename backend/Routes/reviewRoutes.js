@@ -2,7 +2,7 @@ const express = require('express');
 const {
   createReview,
   getAllReviews,
-  getReviewById,
+  getReviewsByPackage,
   updateReview,
   deleteReview,
 } = require('../Controller/reviewController');
@@ -13,10 +13,10 @@ const router = express.Router();
 router.post('/', createReview);
 
 // **GET**: Retrieve all reviews
-router.get('/', getAllReviews);
+router.get('/getAllReviews', getAllReviews);
 
 // **GET**: Retrieve a single review by ID
-router.get('/:id', getReviewById);
+router.get('/get-reviews-by-package/:packageId', getReviewsByPackage);
 
 // **PUT**: Update a review by ID
 router.put('/:id', updateReview);

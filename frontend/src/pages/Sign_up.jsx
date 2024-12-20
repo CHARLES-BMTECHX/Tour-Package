@@ -1,12 +1,23 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle, faFacebook } from "@fortawesome/free-brands-svg-icons";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import sign_up_bg from "../images/sign-up-bg.jpg";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
-import { TextField, Button, Box, Grid, Typography } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Typography,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+} from "@mui/material";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
-const Sign_up = () => {
+const Sign_up = ({ open, onClose, onSignInClick }) => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -16,8 +27,7 @@ const Sign_up = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [alert, setAlert] = useState({ message: "", type: "", visible: false }); // State for alert
-  const navigate = useNavigate();
+  const [alert, setAlert] = useState({ message: "", type: "", visible: false });
 
   // Validation functions
   const validateFullName = (name) => /^[a-zA-Z\s]+$/.test(name);
@@ -75,7 +85,6 @@ const Sign_up = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check all validations before submission
     if (
       !validateFullName(formData.username) ||
       !validateEmail(formData.email) ||
@@ -94,10 +103,9 @@ const Sign_up = () => {
     try {
       const baseUrl = import.meta.env.VITE_BASE_URL;
       const response = await axios.post(`${baseUrl}/users/register`, formData);
-      console.log("Success:", response.data);
 
       setAlert({
-        message: "Signup successful! Redirecting to Sign In...",
+        message: "Signup successful! You can now sign in.",
         type: "success",
         visible: true,
       });
@@ -110,11 +118,8 @@ const Sign_up = () => {
         confirmPassword: "",
       });
 
-      setTimeout(() => {
-        navigate("/sign_in");
-      }, 2000); // Navigate to Sign In after 2 seconds
+      onClose(); // Close the modal after signup success
     } catch (error) {
-      console.error("Error:", error);
       setAlert({
         message: "Something went wrong! Please try again.",
         type: "danger",
@@ -133,198 +138,193 @@ const Sign_up = () => {
     formData.password === formData.confirmPassword;
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center" }}>
-      {/* Alert Box */}
-      {alert.visible && (
-        <div
-          className={`alert alert-${alert.type} position-fixed top-0 end-0 m-3`}
-          role="alert"
-          style={{ zIndex: 1050, width: "300px" }}
-        >
-          {alert.message}
-          <button
-            type="button"
-            className="btn-close ms-2"
-            aria-label="Close"
-            onClick={closeAlert}
-          ></button>
-        </div>
-      )}
-
-      <Grid
-        container
-        spacing={2}
-        sx={{ padding: 4, borderRadius: 2, boxShadow: 3 }}
-      >
-        {/* Left Column - Sign-Up Form */}
-        <Grid
-          item
-          xs={12}
-          md={6}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: 3,
-          }}
-        >
-          <Box sx={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
-            <Typography variant="h4" className="text-center mb-4" gutterBottom>
-              SIGN UP
-            </Typography>
-            <Button
-              variant="contained"
-              color="warning"
-              fullWidth
-              startIcon={<FontAwesomeIcon icon={faGoogle} />}
-              sx={{ mb: 2 }}
-            >
-              Sign Up with Google
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              startIcon={<FontAwesomeIcon icon={faFacebook} />}
-              sx={{ mb: 4 }}
-            >
-              Sign Up with Facebook
-            </Button>
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {/* Full Name Field */}
-                <TextField
-                  label="User Name"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.username}
-                  helperText={errors.username}
-                />
-
-                {/* Email Field */}
-                <TextField
-                  label="Email ID"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.email}
-                  helperText={errors.email}
-                />
-
-                {/* Password Field */}
-                <TextField
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.password}
-                  helperText={errors.password}
-                />
-
-                {/* Confirm Password Field */}
-                <TextField
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.confirmPassword}
-                  helperText={errors.confirmPassword}
-                />
-
-                {/* Mobile Number Field */}
-                <TextField
-                  label="Mobile Number"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.phoneNumber}
-                  helperText={errors.phoneNumber}
-                />
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={!isFormValid}
-                  sx={{
-                    backgroundColor: "rgba(40, 41, 65, 1)",
-                    color: "white",
-                    mt: 2,
-                    "&:disabled": {
-                      backgroundColor: "#ccc",
-                    },
-                  }}
-                >
-                  Sign Up
-                </Button>
-              </Box>
-            </form>
-          </Box>
-        </Grid>
-
-        {/* Right Column - Image */}
-        <Grid
-          item
-          xs={12}
-          md={6}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}
-        >
-          <Box
-            component="img"
-            src={sign_up_bg}
-            alt="Signup Visual"
-            className="img-fluid rounded"
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <span>Sign Up</span>
+          <IconButton onClick={onClose}>
+            <FontAwesomeIcon icon={faTimes} />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ padding: 4, borderRadius: 2, boxShadow: 3 }}>
+          <Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: 3 }}>
+            <Box sx={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
+              <Typography variant="h4" className="text-center mb-4" gutterBottom>
+                SIGN UP
+              </Typography>
+              <Button
+                variant="contained"
+                color="warning"
+                fullWidth
+                startIcon={<FontAwesomeIcon icon={faGoogle} />}
+                sx={{ mb: 2 }}
+              >
+                Sign Up with Google
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                startIcon={<FontAwesomeIcon icon={faFacebook} />}
+                sx={{ mb: 4 }}
+              >
+                Sign Up with Facebook
+              </Button>
+              <form onSubmit={handleSubmit}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <TextField
+                    label="User Name"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.username}
+                    helperText={errors.username}
+                  />
+                  <TextField
+                    label="Email ID"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.email}
+                    helperText={errors.email}
+                  />
+                  <TextField
+                    label="Password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.password}
+                    helperText={errors.password}
+                  />
+                  <TextField
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
+                  />
+                  <TextField
+                    label="Mobile Number"
+                    name="phoneNumber"
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.phoneNumber}
+                    helperText={errors.phoneNumber}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    fullWidth
+                    disabled={!isFormValid}
+                    sx={{
+                      backgroundColor: "rgba(40, 41, 65, 1)",
+                      color: "white",
+                      mt: 2,
+                      "&:disabled": {
+                        backgroundColor: "#ccc",
+                      },
+                    }}
+                  >
+                    Sign Up
+                  </Button>
+                </Box>
+              </form>
+            </Box>
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={6}
             sx={{
-              // zIndex: -1,
-              width: "100%",
-              height: "90vh",
-              objectFit: "cover",
-              borderRadius: 2,
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              color: "white",
-              zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            <Typography variant="h3" gutterBottom>
-              Welcome to Sign_Up
-            </Typography>
-            <Typography variant="body1">
-              Already have an account?{" "}
-              <Link to="/sign_in" style={{ color: "white" }}>
-                Sign In
-              </Link>
-            </Typography>
-          </Box>
+            <Box
+              component="img"
+              src={sign_up_bg}
+              alt="Signup Visual"
+              className="img-fluid rounded"
+              sx={{
+                width: "100%",
+                height: "80vh",
+                objectFit: "cover",
+                borderRadius: 2,
+                transition: "transform 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "scale(1.1)",
+                },
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                color: "white",
+                zIndex: 2,
+              }}
+            >
+              <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                Welcome to Sign Up
+              </h1>
+              <p style={{ fontSize: "1rem" }}>
+                Already have an account?{" "}
+                <span
+                  onClick={onSignInClick}
+                  style={{
+                    color: "yellow",
+                    textDecoration: "underline",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  Sign In
+                </span>
+              </p>
+            </Box>
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                zIndex: 1,
+                opacity: 0,
+                transition: "opacity 0.3s ease-in-out",
+                "&:hover": {
+                  opacity: 1,
+                },
+              }}
+            />
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -29,6 +29,70 @@ const getAllAddresses = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch addresses", error });
   }
 };
+const getAllAddressesWithCategories = async (req, res) => {
+  try {
+    const addresses = await Address.aggregate([
+      {
+        $lookup: {
+          from: "packages", // The collection name of the Package model
+          localField: "_id", // The field in the Address collection
+          foreignField: "addressId", // The field in the Package collection
+          as: "packages", // The name of the array field in the result
+        },
+      },
+      {
+        $match: {
+          packages: { $ne: [] }, // Only include addresses that have at least one package
+        },
+      },
+      {
+        $group: {
+          _id: "$type", // Group by the `type` field (domestic or international)
+          addresses: {
+            $push: {
+              _id: "$_id",
+              country: "$country",
+              state: "$state",
+              city: "$city",
+              description: "$description",
+              stateImage: "$stateImage",
+              startingPrice: "$startingPrice",
+              packages: {
+                $map: {
+                  input: "$packages",
+                  as: "package",
+                  in: {
+                    _id: "$$package._id",
+                    name: "$$package.name",
+                    price: "$$package.price",
+                    duration: "$$package.duration",
+                    inclusions: "$$package.inclusions",
+                    images: "$$package.images",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0, // Remove the `_id` field from the group result
+          category: "$_id", // Rename `_id` to `category`
+          addresses: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      message: "Addresses with valid packages categorized successfully",
+      data: addresses,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch addresses", error });
+  }
+};
+
 
 // Get address by filters (country, state, city)
 const getAddressByFilters = async (req, res) => {
@@ -89,7 +153,6 @@ const createAddress = async (req, res) => {
   }
 };
 
-module.exports = { createAddress };
 
 
 // Update an existing address by ID with image upload
@@ -157,4 +220,5 @@ module.exports = {
   updateAddress: [upload.single("stateImage"), updateAddress],
   deleteAddress,
   getImage,
+  getAllAddressesWithCategories
 };

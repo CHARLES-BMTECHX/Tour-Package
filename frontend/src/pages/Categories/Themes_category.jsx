@@ -17,14 +17,14 @@ const ThemesCategory = ({ themesData }) => {
         {/* Use Object.values to convert the object into an array of values */}
         {Object.values(themesData).map((theme, index) => {
           // Construct the image URL dynamically
-          const themeImagePath = theme.themeImage || '';
-          const parts = themeImagePath.split('\\'); // Handle Windows-style paths
-          const themeName = parts[2]; // Extract the theme name from the path
-          const fileName = parts.pop(); // Extract the file name
+            const themeImagePath = theme.themeImage || '';
+            const parts = themeImagePath.split('\\'); // Handle Windows-style paths
+            const themeName = parts[2]; // Extract the theme name from the path
+            const fileName = parts.pop(); // Extract the file name
 
-          const themeImageURL = `http://localhost:3000/api/themes/get-image-by-query?themeName=${encodeURIComponent(
-            themeName
-          )}&fileName=${encodeURIComponent(fileName)}`;
+            const themeImageURL = `http://localhost:3000/api/themes/get-image-by-query?themeName=${encodeURIComponent(
+              themeName
+            )}&fileName=${encodeURIComponent(fileName)}`;
 
           return (
             <div key={index} className="col-md-4 col-lg-3">

@@ -8,6 +8,11 @@ import Reset_password from "./pages/Reset_password";
 import WriteReview from "./pages/Reviews/WriteReview";
 import Review from "./pages/Reviews/Review";
 import { UserProvider } from "./hooks/UserContext";
+import CityView from "./pages/Categories/CityCard/CityView";
+import StatePage from "./pages/Categories/Statecard/StatePage";
+import ThemePage from "./pages/Categories/ThemeCard/ThemePage";
+import PackagePage from "./pages/Categories/PackageCard/PackagePage";
+import Top_destinations from "./pages/Destinations/Top_destinations";
 
 export default function App() {
   return (
@@ -23,6 +28,11 @@ export default function App() {
           <Route path="/sign_in" element={<Sign_in />}/>
           <Route path="/read-review" element={<Review />}/>
           <Route path="/write-review" element={<WriteReview />}/>
+          <Route path="/city-view" element={<CityView />}/>
+          <Route path="/state/:stateName" element={<StatePage/>} />
+          <Route path="/themes/:themename" element={<ThemePage />} />
+          <Route path="/package/:packageId" element={<PackagePage/>} />
+          <Route path="/top-destinations" element={<Top_destinations/>} />
         </Route>
       </Routes>
     </Router>

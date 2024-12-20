@@ -14,14 +14,14 @@ const Review = () => {
   const prevRef = useRef(null);
   const nextRef = useRef(null);
   const swiperRef = useRef(null);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
   const baseurl = import.meta.env.VITE_BASE_URL; // Base URL for API
 
   // Fetch reviews from API
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${baseurl}/reviews`, {
+      const response = await axios.get(`${baseurl}/reviews/getAllReviews`, {
         params: { page, limit: 10 }, // Send page and limit as query parameters
       });
       const fetchedReviews = response.data.reviews;
@@ -63,7 +63,7 @@ const Review = () => {
   };
 
   const handleWriteReview = () => {
-    navigate('/write-review');
+    navigate("/write-review");
   };
 
   return (
@@ -73,7 +73,8 @@ const Review = () => {
           Over 40 Lac+ Happy Travelers
         </h1>
         <p className="text-dark text-center">
-          Real travelers. Real stories. Real opinions to help you make the right choice.
+          Real travelers. Real stories. Real opinions to help you make the right
+          choice.
         </p>
       </div>
 
@@ -121,17 +122,27 @@ const Review = () => {
               <div className="d-flex justify-content-between mb-3">
                 {/* Avatar and Name */}
                 <div className="d-flex align-items-center">
-                  <div className="avatar me-3">
+                  <div
+                    className="avatar me-3 text-white d-flex align-items-center justify-content-center rounded-circle"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      backgroundColor: "#ef156c",
+                    }}
+                  >
                     {review.name.charAt(0).toUpperCase()} {/* First letter of name */}
                   </div>
                   <div>
                     <h5 className="mb-0">{review.name}</h5>
-                    <small className="text-muted">{review.orderId.username}</small>
+                    <small className="text-muted">
+                      {review.bookingDetails.username}
+                    </small>
                   </div>
                 </div>
                 {/* Date */}
                 <div className="text-muted small">
-                  {new Date(review.orderId.date).toLocaleDateString()} {/* Format Date */}
+                  {new Date(review.bookingDetails.date).toLocaleDateString()}{" "}
+                  {/* Format Date */}
                 </div>
               </div>
               {/* Rating */}
@@ -142,16 +153,18 @@ const Review = () => {
               <p className="fw-bold mb-2">{review.comments}</p>
               {/* Package Details */}
               <p>
-                <strong>Package:</strong> {review.orderId.packageId.name}
+                <strong>Package:</strong>{" "}
+                {review.packageDetails.name}
               </p>
               <p>
-                <strong>Description:</strong> {review.orderId.packageId.packageDescription}
+                <strong>Description:</strong>{" "}
+                {review.packageDetails.packageDescription}
               </p>
               <p>
-                <strong>Duration:</strong> {review.orderId.packageId.duration}
+                <strong>Duration:</strong> {review.packageDetails.duration}
               </p>
               <small className="text-muted">
-                <strong>Price:</strong> ${review.orderId.packageId.price}
+                <strong>Price:</strong> ₹{review.packageDetails.price}
               </small>
             </div>
           </SwiperSlide>
@@ -162,13 +175,27 @@ const Review = () => {
       <div className="d-flex justify-content-center mt-4 gap-3">
         {hasMore && (
           <button
-            className="btn "
+            className="btn"
             onClick={handleReadMore}
-            style={{border:'2px solid #ef156c',color:'#ef156c'}}
+            style={{
+              border: "2px solid #ef156c",
+              color: "#ef156c",
+              textTransform: "none",
+            }}
           >
             Read More Reviews
           </button>
         )}
+        <button
+          className="btn text-white"
+          onClick={handleWriteReview}
+          style={{
+            backgroundColor: "#ef156c",
+            textTransform: "none",
+          }}
+        >
+          Write Review
+        </button>
       </div>
     </div>
   );

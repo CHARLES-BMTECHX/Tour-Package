@@ -232,28 +232,186 @@ const getFilteredPackages = async (req, res) => {
     });
   }
 };
+const getCitiesByState = async (req, res) => {
+  try {
+    const { stateName } = req.params;
+
+    // Fetch state details from Address collection
+    const stateDetails = await Address.findOne({ state: stateName }).select(
+      'state country description type stateImage startingPrice'
+    );
+
+    if (!stateDetails) {
+      return res.status(404).json({ error: `State details not found for: ${stateName}` });
+    }
+
+    // Fetch packages with matching stateName
+    const packages = await Package.find()
+      .populate('addressId', 'state city country description')
+      .populate('themeId', 'name')
+      .populate('userId', 'username email');
+
+    // Filter packages by the stateName
+    const filteredPackages = packages.filter(
+      (pkg) => pkg.addressId && pkg.addressId.state === stateName
+    );
+
+    if (!filteredPackages.length) {
+      return res.status(404).json({ error: `No packages found for state: ${stateName}` });
+    }
+
+    // Group packages by cities
+    const groupedCities = {};
+    filteredPackages.forEach((pkg) => {
+      const cityName = pkg.addressId.city;
+      if (!groupedCities[cityName]) {
+        groupedCities[cityName] = [];
+      }
+
+      groupedCities[cityName].push({
+        packageId: pkg._id,
+        name: pkg.name,
+        theme: pkg.themeId?.name,
+        user: pkg.userId ? { username: pkg.userId.username, email: pkg.userId.email } : null,
+        price: pkg.price,
+        duration: pkg.duration,
+        inclusions: pkg.inclusions,
+        images: pkg.images,
+        description: pkg.packageDescription,
+        bestMonth: pkg.bestMonth,
+      });
+    });
+
+    res.status(200).json({
+      message: `Packages grouped by cities for state: ${stateName}`,
+      stateDetails: {
+        stateName: stateDetails.state,
+        description: stateDetails.description,
+        country: stateDetails.country,
+        type: stateDetails.type,
+        stateImage: stateDetails.stateImage,
+        startingPrice: stateDetails.startingPrice,
+      },
+      cities: groupedCities,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error fetching cities by state',
+      details: error.message,
+    });
+  }
+};
+const getTopDestinationPackagesGroupedByState = async (req, res) => {
+  try {
+    // Step 1: Fetch all valid addresses from the Address collection
+    const validAddresses = await Address.find({}, "_id country state city description type stateImage startingPrice");
+
+    if (!validAddresses || validAddresses.length === 0) {
+      return res.status(404).json({ error: "No valid addresses found" });
+    }
+
+    // Create a lookup for addresses by their ID
+    const addressLookup = validAddresses.reduce((acc, address) => {
+      acc[address._id.toString()] = address;
+      return acc;
+    }, {});
+
+    // Step 2: Find packages with "top destination" and a valid addressId
+    const topDestinationPackages = await Package.find({
+      categories: "top destination", // Filter for top destination category
+      addressId: { $in: Object.keys(addressLookup) }, // Ensure the addressId exists in the valid addresses
+    })
+      .populate("themeId", "name") // Populate theme details
+      .populate("userId", "username email"); // Populate user details
+
+    if (!topDestinationPackages || topDestinationPackages.length === 0) {
+      return res.status(404).json({ error: "No top destination packages with valid address found" });
+    }
+
+    // Group packages by state and city
+    const groupedPackages = {};
+
+    topDestinationPackages.forEach((pkg) => {
+      const address = addressLookup[pkg.addressId.toString()];
+      if (!address) return;
+
+      const stateKey = address.state;
+
+      if (!groupedPackages[stateKey]) {
+        groupedPackages[stateKey] = {
+          stateDetails: {
+            state: address.state,
+            country: address.country,
+            description: address.description,
+            type: address.type,
+            stateImage: address.stateImage,
+            startingPrice: address.startingPrice,
+          },
+          cities: {},
+        };
+      }
+
+      const cityKey = address.city;
+      if (!groupedPackages[stateKey].cities[cityKey]) {
+        groupedPackages[stateKey].cities[cityKey] = [];
+      }
+
+      groupedPackages[stateKey].cities[cityKey].push({
+        packageId: pkg._id,
+        name: pkg.name,
+        theme: pkg.themeId ? pkg.themeId.name : null,
+        user: pkg.userId
+          ? { username: pkg.userId.username, email: pkg.userId.email }
+          : null,
+        price: pkg.price,
+        duration: pkg.duration,
+        inclusions: pkg.inclusions,
+        images: pkg.images,
+        description: pkg.packageDescription,
+        bestMonth: pkg.bestMonth,
+      });
+
+      // Update the state's starting price if this package has a lower price
+      groupedPackages[stateKey].stateDetails.startingPrice = Math.min(
+        groupedPackages[stateKey].stateDetails.startingPrice,
+        pkg.price
+      );
+    });
+
+    res.status(200).json({
+      message: "Top destination packages grouped by state and city fetched successfully",
+      data: groupedPackages,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Error fetching top destination packages grouped by state and city",
+      details: error.message,
+    });
+  }
+};
+
+
+
 
 // **GET**: Retrieve a single package by ID
 const getPackageById = async (req, res) => {
   try {
     const { id } = req.params;
     const package = await Package.findById(id)
-      .populate('themeId', 'name')
-      .populate('userId', 'username email')
-      .populate('addressId', 'country state city');
+      .populate("addressId", "state city country description")
+      .populate("userId", "username email")
+      .populate("themeId", "name");
 
     if (!package) {
-      return res.status(404).json({ error: 'Package not found' });
+      return res.status(404).json({ error: "Package not found" });
     }
 
     res.status(200).json(package);
   } catch (error) {
-    res.status(500).json({
-      error: 'Error retrieving package',
-      details: error.message,
-    });
+    res.status(500).json({ error: "Error retrieving package", details: error.message });
   }
 };
+
 
 // **PUT**: Update a package
 const updatePackage = async (req, res) => {
@@ -391,10 +549,12 @@ module.exports = {
   createPackage,
   getAllPackages,
   getFilteredPackages,
+  getCitiesByState,
   getPackageById,
   updatePackage,
   deletePackage,
   getImage,
+  getTopDestinationPackagesGroupedByState
 };
 
 

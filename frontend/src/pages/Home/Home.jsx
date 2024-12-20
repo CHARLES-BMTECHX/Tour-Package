@@ -22,6 +22,7 @@ import {
   CardContent,
   Typography,
   Container,
+  
 } from "@mui/material";
 import ReviewCard from "../Reviews/ReviewCard";
 import Trending_category from "../Categories/Trending_category";
@@ -32,6 +33,8 @@ import Pilgrimage_category from "../Categories/Pilgrimage_category";
 import Heritage_category from "../Categories/Heritage_category";
 import Beach_category from "../Categories/Beach_category";
 import Themes_category from "../Categories/Themes_category";
+import Wildlife_category from "../Categories/Wildlife_category";
+import MapComponent from "../../components/MapComponent";
 const packages = [
   {
     name: "Kerala Backwaters",
@@ -78,6 +81,24 @@ const packages = [
     duration: "2 to 3",
     bestMonth: "December, 2024",
   },
+];
+const locations = [
+  {
+    stateName: "Coorg",
+    coordinates: [12.4208, 75.7406],
+    startingPrice: 5100,
+  },
+  {
+    stateName: "Munnar",
+    coordinates: [10.0889, 77.0595],
+    startingPrice: 5000,
+  },
+  {
+    stateName: "Pondicherry",
+    coordinates: [11.9416, 79.8083],
+    startingPrice: 4750,
+  },
+  // Add more states as needed
 ];
 
 const Dropdown = ({ label, options, icon, defaultText }) => (
@@ -216,6 +237,7 @@ const Home = () => {
   const [trendingData, setTrendingData] = useState({});
   const [topDestinationsData, setTopDestinationsData] = useState({});
   const [honeymoonData, setHoneymoonData] = useState({});
+  const [wildlifeData, setWildlifeData] = useState({});
   const [hillStationsData, setHillStationsData] = useState({});
   const [pilgrimageData, setPilgrimageData] = useState({});
   const [heritageData, setHeritageData] = useState({});
@@ -243,7 +265,7 @@ const Home = () => {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${baseurl}/reviews`, {
+      const response = await axios.get(`${baseurl}/reviews/getAllReviews`, {
         params: { page, limit: 10 },
       });
       const { reviews: fetchedReviews, totalPages } = response.data;
@@ -260,11 +282,13 @@ const Home = () => {
 
   
       const { data } = response.data;
-  
+      console.log(data,'home');
+      
       if (data && data.TRENDING_DESTINATIONS) {
         setTrendingData(data.TRENDING_DESTINATIONS || {});
         setTopDestinationsData(data.TOP_DESTINATIONS || {});
         setHoneymoonData(data.HONEYMOON_DESTINATIONS || {});
+        setWildlifeData(data.WILDLIFE_DESTINATIONS || {})
         setHillStationsData(data.HILL_STATIONS_DESTINATIONS || {});
         setPilgrimageData(data.PILGRIMAGE_DESTINATIONS || {});
         setHeritageData(data.HERITAGE_DESTINATIONS || {});
@@ -375,7 +399,7 @@ const Home = () => {
               />
               <div className="col-12 col-md-3">
                 <button
-                  className="btn btn-lg fw-bold w-100"
+                  className="btn h-100 fw-bold w-100"
                   style={{ backgroundColor: "#ef156c", color: "white" }}
                 >
                   <FontAwesomeIcon icon={faSearch} className="me-2" /> Explore
@@ -395,83 +419,149 @@ const Home = () => {
 
         {/* Reviews Section */}
         <div className="container mt-5">
-          <div className="d-flex justify-content-center flex-column">
-            <h1 className="text-center text-dark mb-4">
-              Over 40 Lac+ Happy Travelers
-            </h1>
-            <p className="text-dark text-center">
-              Real travelers. Real stories. Real opinions to help you make the
-              right choice.
-            </p>
-          </div>
+        <div className="container mt-5 review-carousel">
+      <div className="d-flex justify-content-center flex-column">
+        <h1 className="text-center text-dark mb-4">
+          Over 40 Lac+ Happy Travelers
+        </h1>
+        <p className="text-dark text-center">
+          Real travelers. Real stories. Real opinions to help you make the right
+          choice.
+        </p>
+      </div>
 
-          {/* Custom Navigation Buttons */}
-          <div className="custom-navigation">
-            <button
-              ref={prevRef}
-              className="btn prev-button"
-              style={{ color: "#ef156c" }}
-            >
-              &#9664; {/* Left Arrow */}
-            </button>
-            <button
-              ref={nextRef}
-              className="btn next-button"
-              style={{ color: "#ef156c" }}
-            >
-              &#9654; {/* Right Arrow */}
-            </button>
-          </div>
-          <Swiper
-            modules={[Navigation, Autoplay]}
-            onSwiper={(swiper) => (swiperRef.current = swiper)}
-            autoplay={{
-              delay: 2000,
-              disableOnInteraction: false,
-            }}
-            slidesPerView={2}
-            spaceBetween={30}
-            breakpoints={{
-              0: { slidesPerView: 1 },
-              768: { slidesPerView: 2 },
-            }}
-            navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
+      {/* Custom Navigation Buttons */}
+      <div className="custom-navigation">
+        <button
+          ref={prevRef}
+          className="btn prev-button"
+          style={{ color: "#ef156c" }}
+        >
+          &#9664; {/* Left Arrow */}
+        </button>
+        <button
+          ref={nextRef}
+          className="btn next-button"
+          style={{ color: "#ef156c" }}
+        >
+          &#9654; {/* Right Arrow */}
+        </button>
+      </div>
+
+      {/* Swiper Slider */}
+      <Swiper
+        modules={[Navigation, Autoplay]}
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+          swiper.params.navigation.prevEl = prevRef.current;
+          swiper.params.navigation.nextEl = nextRef.current;
+        }}
+        autoplay={{
+          delay: 2000,
+          disableOnInteraction: false,
+        }}
+        slidesPerView={2}
+        spaceBetween={30}
+        pagination={false} // Disable bullet points
+        breakpoints={{
+          0: { slidesPerView: 1 },
+          768: { slidesPerView: 2 },
+        }}
+      >
+        {reviews.map((review, index) => (
+          <SwiperSlide key={index}>
+            <div className="card p-3 shadow-sm">
+              <div className="d-flex justify-content-between mb-3">
+                {/* Avatar and Name */}
+                <div className="d-flex align-items-center">
+                  <div
+                    className="avatar me-3 text-white d-flex align-items-center justify-content-center rounded-circle"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      backgroundColor: "#ef156c",
+                    }}
+                  >
+                    {review.name.charAt(0).toUpperCase()} {/* First letter of name */}
+                  </div>
+                  <div>
+                    <h5 className="mb-0">{review.name}</h5>
+                    <small className="text-muted">
+                      {review.bookingDetails.username}
+                    </small>
+                  </div>
+                </div>
+                {/* Date */}
+                <div className="text-muted small">
+                  {new Date(review.bookingDetails.date).toLocaleDateString()}{" "}
+                  {/* Format Date */}
+                </div>
+              </div>
+              {/* Rating */}
+              <div className="rating mb-3 text-muted">
+                {renderStars(review.tourRating)} {/* Dynamic Rating */}
+              </div>
+              {/* Comments */}
+              <p className="fw-bold mb-2">{review.comments}</p>
+              {/* Package Details */}
+              <p>
+                <strong>Package:</strong>{" "}
+                {review.packageDetails.name}
+              </p>
+              {/* <p>
+                <strong>Description:</strong>{" "}
+                {review.packageDetails.packageDescription}
+              </p> */}
+              <p>
+                <strong>Duration:</strong> {review.packageDetails.duration}
+              </p>
+              <small className="text-muted">
+                <strong>Price:</strong> ₹{review.packageDetails.price}
+              </small>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      {/* Read More and Write Review Buttons */}
+      <div className="d-flex justify-content-center mt-4 gap-3">
+       
+          <button
+            className="btn"
+            onClick={handleReadMore}
+            style={{
+              border: "2px solid #ef156c",
+              color: "#ef156c",
+              textTransform: "none",
             }}
           >
-            {reviews.map((review, index) => (
-              <SwiperSlide key={index}>
-                <ReviewCard review={review} renderStars={renderStars} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          <div className="d-flex justify-content-center mt-4 gap-3">
-            <button
-              className="btn "
-              style={{ color: "#ef156c", border: "2px solid #ef156c" }}
-              onClick={handleReadMore}
-            >
-              Read More Reviews
-            </button>
-
-            <button
-              className="btn text-white"
-              style={{ backgroundColor: "#ef156c" }}
-              onClick={handleWriteReview}
-            >
-              Write Review
-            </button>
-          </div>
+            Read More Reviews
+          </button>
+        
+        <button
+          className="btn text-white"
+          onClick={handleWriteReview}
+          style={{
+            backgroundColor: "#ef156c",
+            textTransform: "none",
+          }}
+        >
+          Write Review
+        </button>
+      </div>
+    </div>
           <Trending_category trendingData={trendingData} />
           <Themes_category themesData={themesData} />
           <Top_category topDestinationsData={topDestinationsData} />
           <Honeymoon_category  honeymoonData={honeymoonData} />
+          <Wildlife_category  wildlifeData={wildlifeData} />
           <Hillstations_category hillStationsData={hillStationsData} />
           <Pilgrimage_category pilgrimageData={pilgrimageData} />
           <Heritage_category heritageData={heritageData} />
           <Beach_category beachData={beachData} />
+          <div style={{height:'65vh'}}> 
+            <MapComponent locationDetails={locations}/>
+          </div>
         </div>
       </div>
     </div>

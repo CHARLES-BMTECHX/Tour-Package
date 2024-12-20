@@ -10,18 +10,18 @@ const {
 const router = express.Router();
 
 // **POST**: Create a new booking
-router.post('/', createBooking);
+router.post('/create-booking', createBooking);
 
 // **GET**: Retrieve all bookings
-router.get('/', getAllBookings);
+router.get('/get-all-bookings', getAllBookings);
 
 // **GET**: Retrieve a booking by ID
-router.get('/:id', getBookingById);
+router.get('/get-booking/:id', getBookingById);
 
 // **PUT**: Update a booking by ID
-router.put('/:id', updateBooking);
+router.put('/update-booking/:id', updateBooking);
 
 // **DELETE**: Delete a booking by ID
-router.delete('/:id', deleteBooking);
+router.delete('/delete-booking/:id', deleteBooking);
 
 module.exports = router;

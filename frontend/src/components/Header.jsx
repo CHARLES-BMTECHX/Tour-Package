@@ -6,24 +6,38 @@ import {
   faCaretUp,
   faUserCircle,
   faSignOutAlt,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
-import logo from '../images/logo.png'
+import logo from "../images/logo.png";
 import { useUser } from "../hooks/UserContext";
+import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import Sign_in from "../pages/Sign_in";
+import Sign_up from "../pages/Sign_up";
 
 const Navbar = () => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const [profile, setPfofile] = useState(false);
-
-  const toggleDropdown = () => {
-    setDropdownOpen((prevState) => !prevState); // Toggle dropdown state
+  const [profile, setProfile] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [signUpOpen, setSignUpOpen] = useState(false);
+  // Handlers for modals
+  const handleSignInOpen = () => {
+    setSignUpOpen(false);
+    setSignInOpen(true);
   };
-  const toggleProfile = () => {
-    setPfofile((prevState) => !prevState); // Toggle dropdown state
-  };
-  const { user, logout } = useUser(); // Access user and logout from context
 
-  const handleMouseEnter = () => setDropdownOpen(true);
-  const handleMouseLeave = () => setDropdownOpen(false);
+  const handleSignInClose = () => setSignInOpen(false);
+
+  const handleSignUpOpen = () => {
+    setSignInOpen(false);
+    setSignUpOpen(true);
+  };
+
+  const handleSignUpClose = () => setSignUpOpen(false);
+
+  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
+  const toggleProfile = () => setProfile((prevState) => !prevState);
+
+  const { user, logout } = useUser();
 
   const destinations = [
     { country: "India", state: "Tamil Nadu", city: "Pondicherry" },
@@ -86,7 +100,7 @@ const Navbar = () => {
             <li className="nav-item">
               <Link
                 className="nav-link text-dark hover-underline"
-                to="/destinations"
+                to="/top-destinations"
               >
                 Destinations
               </Link>
@@ -95,8 +109,8 @@ const Navbar = () => {
             {/* Tours Dropdown */}
             <li
               className="nav-item dropdown"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={() => setDropdownOpen(true)}
+              onMouseLeave={() => setDropdownOpen(false)}
             >
               <Link
                 className="nav-link dropdown-toggle hover-underline text-dark d-flex align-items-center"
@@ -113,7 +127,6 @@ const Navbar = () => {
                 />
               </Link>
 
-              {/* Dropdown Menu */}
               <ul
                 className={`dropdown-menu ${
                   isDropdownOpen ? "show" : ""
@@ -121,12 +134,8 @@ const Navbar = () => {
                 aria-labelledby="toursDropdown"
                 style={{ minWidth: "250px" }}
               >
-                {/* Domestic Packages Section */}
                 <li>
-                  <h6
-                    className="dropdown-header"
-                    style={{ color: "rgba(40, 41, 65, 1)" }}
-                  >
+                  <h6 className="dropdown-header" style={{ color: "rgba(40, 41, 65, 1)" }}>
                     Domestic Packages
                   </h6>
                 </li>
@@ -147,12 +156,8 @@ const Navbar = () => {
                   <hr className="dropdown-divider" />
                 </li>
 
-                {/* International Packages Section */}
                 <li>
-                  <h6
-                    className="dropdown-header"
-                    style={{ color: "rgba(40, 41, 65, 1)" }}
-                  >
+                  <h6 className="dropdown-header" style={{ color: "rgba(40, 41, 65, 1)" }}>
                     International Packages
                   </h6>
                 </li>
@@ -171,41 +176,28 @@ const Navbar = () => {
               </ul>
             </li>
 
-            {/* Gateways */}
+            {/* Other Links */}
             <li className="nav-item">
-              <Link
-                className="nav-link text-dark hover-underline"
-                to="/holiday-packages"
-              >
+              <Link className="nav-link text-dark hover-underline" to="/holiday-packages">
                 Gateways
               </Link>
             </li>
-
-            {/* Tour Plans */}
             <li className="nav-item">
-              <Link
-                className="nav-link text-dark hover-underline"
-                to="/holiday-deals"
-              >
+              <Link className="nav-link text-dark hover-underline" to="/holiday-deals">
                 Tour Plans
               </Link>
             </li>
-
-            {/* Blogs */}
             <li className="nav-item">
-              <Link
-                className="nav-link text-dark hover-underline"
-                to="/luxury-holidays"
-              >
+              <Link className="nav-link text-dark hover-underline" to="/luxury-holidays">
                 Blogs
               </Link>
             </li>
+
             {/* User Profile Icon with Dropdown */}
             <li className="nav-item dropdown">
-              {/* Dropdown Trigger */}
               <button
                 className="nav-link dropdown-toggle text-dark d-flex align-items-center bg-transparent border-0"
-                onClick={toggleProfile} // Control visibility with state
+                onClick={toggleProfile}
                 aria-expanded={profile ? "true" : "false"}
               >
                 <FontAwesomeIcon icon={faUserCircle} className="fs-3 me-1" />
@@ -216,7 +208,6 @@ const Navbar = () => {
                 />
               </button>
 
-              {/* Dropdown Menu */}
               <ul
                 className={`dropdown-menu dropdown-menu-end shadow ${
                   profile ? "show" : ""
@@ -245,14 +236,14 @@ const Navbar = () => {
                 ) : (
                   <>
                     <li>
-                      <Link className="dropdown-item" to="/sign_in">
+                      <button className="dropdown-item" onClick={handleSignInOpen}>
                         Sign In
-                      </Link>
+                      </button>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/sign_up">
+                      <button className="dropdown-item" onClick={handleSignUpOpen}>
                         Sign Up
-                      </Link>
+                      </button>
                     </li>
                   </>
                 )}
@@ -261,6 +252,44 @@ const Navbar = () => {
           </ul>
         </div>
       </div>
+
+      {/* Sign In Modal */}
+      <Dialog open={signInOpen} onClose={handleSignInClose} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <div className="d-flex justify-content-between align-items-center">
+            <span>Sign In</span>
+            <IconButton onClick={handleSignInClose}>
+              <FontAwesomeIcon icon={faTimes} />
+            </IconButton>
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <Sign_in
+            open={signInOpen}
+            onClose={handleSignInClose}
+            onSignUpClick={handleSignUpOpen}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Sign Up Modal */}
+      <Dialog open={signUpOpen} onClose={handleSignUpClose} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <div className="d-flex justify-content-between align-items-center">
+            <span>Sign Up</span>
+            <IconButton onClick={handleSignUpClose}>
+              <FontAwesomeIcon icon={faTimes} />
+            </IconButton>
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <Sign_up
+            open={signUpOpen}
+            onClose={handleSignUpClose}
+            onSignInClick={handleSignInOpen}
+          />
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 };

@@ -1,4 +1,6 @@
 const Theme = require('../Models/themesModel'); // Import the Theme model
+const Package =require('../Models/packageModel');
+const Address=require('../Models/addressModel');
 const multer = require('multer');
  const path = require('path');
 const fs = require('fs');
@@ -21,57 +23,196 @@ const upload = multer({ storage: storage });
 
 // Get all themes
 const getAllThemes = async (req, res) => {
-    try {
-      const themesWithCounts = await Theme.aggregate([
-        {
-          $lookup: {
-            from: "packages", // The collection name for packages
-            localField: "_id", // The field in themes to match
-            foreignField: "themeId", // The field in packages to match
-            as: "relatedPackages", // Alias for the joined data
+  try {
+    const themesWithCounts = await Theme.aggregate([
+      {
+        $lookup: {
+          from: "packages", // The collection name for packages
+          localField: "_id", // The field in themes to match
+          foreignField: "themeId", // The field in packages to match
+          as: "relatedPackages", // Alias for the joined data
+        },
+      },
+      {
+        $unwind: {
+          path: "$relatedPackages",
+          preserveNullAndEmptyArrays: true, // Include themes with no packages
+        },
+      },
+      {
+        $lookup: {
+          from: "addresses", // The collection name for addresses
+          localField: "relatedPackages.addressId", // The field in packages to match with addresses
+          foreignField: "_id", // The field in addresses to match
+          as: "relatedAddress", // Alias for the joined data
+        },
+      },
+      {
+        $addFields: {
+          isValidPackage: {
+            $cond: {
+              if: { $gt: [{ $size: "$relatedAddress" }, 0] }, // Check if valid address exists
+              then: true,
+              else: false,
+            },
           },
         },
-        {
-          $addFields: {
-            packageCount: { $size: "$relatedPackages" }, // Calculate the number of related packages
+      },
+      {
+        $group: {
+          _id: "$_id",
+          themename: { $first: "$name" },
+          description: { $first: "$description" },
+          themeImage: { $first: "$themeImage" },
+          packageCount: {
+            $sum: { $cond: [{ $eq: ["$isValidPackage", true] }, 1, 0] }, // Count only valid packages
           },
         },
-        {
-          $project: {
-            _id: 1,
-            themename: "$name", // Rename `name` to `themename`
-            description: 1,
-            themeImage: 1, // Include themeImage field
-            packageCount: 1, // Include package count
-          },
+      },
+      {
+        $project: {
+          _id: 1,
+          themename: 1,
+          description: 1,
+          themeImage: 1,
+          packageCount: 1,
         },
-      ]);
-  
-      // Format data as an object where each key is the theme name
-      const categorizedThemes = {};
-      themesWithCounts.forEach((theme) => {
-        categorizedThemes[theme.themename.toUpperCase()] = {
-          _id: theme._id,
-          themename: theme.themename,
-          description: theme.description,
-          themeImage: theme.themeImage,
-          packageCount: theme.packageCount,
-        };
-      });
-  
-      res.status(200).json({
-        message: "Themes grouped by categories fetched successfully",
-        data: categorizedThemes,
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: "Error retrieving themes with package counts",
-        details: error.message,
+      },
+    ]);
+
+    // If no themes or counts, return an empty object
+    if (!themesWithCounts || themesWithCounts.length === 0) {
+      return res.status(200).json({
+        message: "No themes available",
+        data: {},
       });
     }
-  };
-  
 
+    // Format data as an object where each key is the theme name
+    const categorizedThemes = {};
+    themesWithCounts.forEach((theme) => {
+      categorizedThemes[theme.themename.toUpperCase()] = {
+        _id: theme._id,
+        themename: theme.themename,
+        description: theme.description,
+        themeImage: theme.themeImage,
+        packageCount: theme.packageCount,
+      };
+    });
+
+    res.status(200).json({
+      message: "Themes grouped by categories fetched successfully",
+      data: categorizedThemes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Error retrieving themes with package counts",
+      details: error.message,
+    });
+  }
+};
+
+
+
+  
+const getThemeDetailsWithStatesAndCities = async (req, res) => {
+  try {
+    const { themename } = req.params;
+
+    // Find the theme by name (case-insensitive)
+    const theme = await Theme.findOne({ name: new RegExp(`^${themename}$`, 'i') });
+
+    if (!theme) {
+      return res.status(404).json({ error: `Theme '${themename}' not found` });
+    }
+
+    // Fetch packages related to the theme
+    const packages = await Package.find({ themeId: theme._id })
+      .populate('addressId', 'state city description country type stateImage startingPrice')
+      .populate('userId', 'username email');
+
+    console.log("Fetched packages:", packages); // Debug log
+
+    // Filter packages with valid addressId
+    const validPackages = packages.filter(pkg => pkg.addressId);
+
+    console.log("Valid packages with addressId:", validPackages); // Debug log
+
+    if (!validPackages.length) {
+      // Return empty states if no valid packages are found
+      return res.status(200).json({
+        message: `No packages found for theme: ${themename}`,
+        themeDetails: {
+          _id: theme._id,
+          themename: theme.name,
+          description: theme.description,
+          themeImage: theme.themeImage,
+          packageCount: 0,
+        },
+        states: {},
+      });
+    }
+
+    // Group valid packages by state and city
+    const groupedStates = {};
+    validPackages.forEach((pkg) => {
+      const address = pkg.addressId;
+      const stateKey = address.state;
+
+      if (!groupedStates[stateKey]) {
+        groupedStates[stateKey] = {
+          stateName: stateKey,
+          stateDetails: {
+            description: address.description,
+            country: address.country,
+            type: address.type,
+            stateImage: address.stateImage,
+            startingPrice: address.startingPrice || pkg.price,
+          },
+          cities: {},
+        };
+      }
+
+      const cityKey = address.city;
+      if (!groupedStates[stateKey].cities[cityKey]) {
+        groupedStates[stateKey].cities[cityKey] = [];
+      }
+
+      groupedStates[stateKey].cities[cityKey].push({
+        packageId: pkg._id,
+        name: pkg.name,
+        theme: themename,
+        user: pkg.userId ? { username: pkg.userId.username, email: pkg.userId.email } : null,
+        price: pkg.price,
+        duration: pkg.duration,
+        inclusions: pkg.inclusions,
+        images: pkg.images,
+        description: pkg.packageDescription,
+        bestMonth: pkg.bestMonth,
+      });
+    });
+
+    res.status(200).json({
+      message: `Details for theme: ${themename}`,
+      themeDetails: {
+        _id: theme._id,
+        themename: theme.name,
+        description: theme.description,
+        themeImage: theme.themeImage,
+        packageCount: validPackages.length, // Use valid packages count
+      },
+      states: groupedStates,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error retrieving theme details with states and cities',
+      details: error.message,
+    });
+  }
+};
+
+
+  
 // Get a theme by ID
     const getThemeById = async (req, res) => {
         try {
@@ -209,5 +350,6 @@ module.exports = {
     getImageByPath,
     updateTheme: [upload.single('themeImage'), updateTheme],
     deleteTheme,
-    getImageByQuery
+    getImageByQuery,
+    getThemeDetailsWithStatesAndCities
 };

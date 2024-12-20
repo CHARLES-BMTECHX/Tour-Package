@@ -7,6 +7,7 @@ const {
   deleteTheme,
   getImageByPath,
   getImageByQuery,
+  getThemeDetailsWithStatesAndCities,
 } = require('../Controller/themesController');
 
 const router = express.Router();
@@ -28,6 +29,8 @@ router.delete('/delete-theme/:id', deleteTheme);
 
 // Route to get an image by themeName and fileName (query parameters)
 router.get('/get-image-by-query', getImageByQuery);
+//getby themename
+router.get('/get-state-city-by-themename/:themename', getThemeDetailsWithStatesAndCities);
 
 // Route to get an image by themeName and fileName (path parameters)
 router.get('/get-image-by-path/:themeName/:fileName', getImageByPath);

@@ -1,23 +1,32 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle, faFacebook } from "@fortawesome/free-brands-svg-icons";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import sign_in from "../images/sign-in.jpg";
-import { Link, useNavigate } from "react-router-dom";
-import { TextField, Button, Box, Grid, FormHelperText } from "@mui/material";
+import { Link } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  Box,
+  Grid,
+  FormHelperText,
+  Dialog,
+  IconButton,
+  DialogTitle,
+  DialogContent,
+} from "@mui/material";
 import axios from "axios";
-import { useUser } from "../hooks/UserContext"; // Import the useUser hook
+import { useUser } from "../hooks/UserContext";
 
-const Sign_in = () => {
+const Sign_in = ({ open, onClose, onSignUpClick }) => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
   const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState({ message: "", type: "", visible: false });
-  const navigate = useNavigate();
 
-  const { login } = useUser(); // Use login function from UserContext
+  const { login } = useUser();
 
   // Validation functions
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -37,9 +46,7 @@ const Sign_in = () => {
       case "password":
         setErrors((prev) => ({
           ...prev,
-          password: validatePassword(value)
-            ? ""
-            : "Password cannot be empty.",
+          password: validatePassword(value) ? "" : "Password cannot be empty.",
         }));
         break;
       default:
@@ -50,7 +57,10 @@ const Sign_in = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateEmail(formData.email) || !validatePassword(formData.password)) {
+    if (
+      !validateEmail(formData.email) ||
+      !validatePassword(formData.password)
+    ) {
       setAlert({
         message: "Please fix the validation errors.",
         type: "danger",
@@ -62,7 +72,6 @@ const Sign_in = () => {
     try {
       const baseUrl = import.meta.env.VITE_BASE_URL;
       const response = await axios.post(`${baseUrl}/users/login`, formData);
-      console.log("Response Data:", response.data);
 
       // Use login function from context to set user globally
       login(response.data.token);
@@ -73,11 +82,8 @@ const Sign_in = () => {
         visible: true,
       });
 
-      setTimeout(() => {
-        navigate("/"); // Navigate to the home page
-      }, 2000);
+      onClose(); // Close the dialog on successful login
     } catch (error) {
-      console.error("Error during sign-in:", error);
       setAlert({
         message: "Invalid credentials. Please try again.",
         type: "danger",
@@ -92,49 +98,57 @@ const Sign_in = () => {
     validateEmail(formData.email) && validatePassword(formData.password);
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center" }}>
-      {/* Alert Box */}
-      {alert.visible && (
-        <div
-          className={`alert alert-${alert.type} position-fixed top-0 end-0 m-3`}
-          role="alert"
-          style={{ zIndex: 1050, width: "300px" }}
-        >
-          {alert.message}
-          <button
-            type="button"
-            className="btn-close ms-2"
-            aria-label="Close"
-            onClick={closeAlert}
-          ></button>
-        </div>
-      )}
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <span>Sign In</span>
+          <IconButton onClick={onClose}>
+            <FontAwesomeIcon icon={faTimes} />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        {/* Alert Box */}
+        {alert.visible && (
+          <div
+            className={`alert alert-${alert.type}`}
+            role="alert"
+            style={{ marginBottom: "1rem" }}
+          >
+            {alert.message}
+            <button
+              type="button"
+              className="btn-close ms-2"
+              aria-label="Close"
+              onClick={closeAlert}
+            ></button>
+          </div>
+        )}
 
-      <Grid container spacing={2} className="shadow-lg" sx={{ padding: 4, borderRadius: 2 }}>
-        <Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <Box sx={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
-            <h3 className="text-center mb-4">SIGN IN</h3>
-            <Button
-              variant="contained"
-              color="warning"
-              fullWidth
-              startIcon={<FontAwesomeIcon icon={faGoogle} />}
-              sx={{ mb: 2 }}
-            >
-              Sign In with Google
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              startIcon={<FontAwesomeIcon icon={faFacebook} />}
-              sx={{ mb: 4 }}
-            >
-              Sign In with Facebook
-            </Button>
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div>
+        <Grid container spacing={2} sx={{ padding: 4 }}>
+          {/* Form Section */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
+              <Button
+                variant="contained"
+                color="warning"
+                fullWidth
+                startIcon={<FontAwesomeIcon icon={faGoogle} />}
+                sx={{ mb: 2 }}
+              >
+                Sign In with Google
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                startIcon={<FontAwesomeIcon icon={faFacebook} />}
+                sx={{ mb: 4 }}
+              >
+                Sign In with Facebook
+              </Button>
+              <form onSubmit={handleSubmit}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <TextField
                     label="Email ID"
                     name="email"
@@ -147,8 +161,6 @@ const Sign_in = () => {
                   {errors.email && (
                     <FormHelperText error>{errors.email}</FormHelperText>
                   )}
-                </div>
-                <div>
                   <TextField
                     label="Password"
                     name="password"
@@ -161,49 +173,103 @@ const Sign_in = () => {
                   {errors.password && (
                     <FormHelperText error>{errors.password}</FormHelperText>
                   )}
-                </div>
-                <div>
                   <Link to="/forgot_password" className="text-primary">
-                    Forgot Password !
+                    Forgot Password!
                   </Link>
-                </div>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={!isFormValid}
-                  sx={{
-                    backgroundColor: "rgba(40, 41, 65, 1)",
-                    color: "white",
-                    mt: 2,
-                    "&:disabled": { backgroundColor: "#ccc" },
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    fullWidth
+                    disabled={!isFormValid}
+                    sx={{
+                      backgroundColor: "rgba(40, 41, 65, 1)",
+                      color: "white",
+                      mt: 2,
+                      "&:disabled": { backgroundColor: "#ccc" },
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                </Box>
+              </form>
+            </Box>
+          </Grid>
+
+          {/* Image Section */}
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Image */}
+            <img
+              src={sign_in}
+              alt="Sign-In Visual"
+              className="img-fluid rounded"
+              style={{
+                width: "100%",
+                height: "50vh",
+                objectFit: "cover",
+                transition: "transform 0.3s ease-in-out",
+              }}
+            />
+
+            {/* Overlay */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                color: "white",
+                zIndex: 2,
+              }}
+            >
+              <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                Welcome to Sign In
+              </h1>
+              <p style={{ fontSize: "1rem" }}>
+                Don't have an account?{" "}
+                <span
+                  style={{
+                    color: "yellow",
+                    textDecoration: "underline",
+                    fontWeight: "bold",
+                    cursor: "pointer",
                   }}
+                  onClick={onSignUpClick}
                 >
-                  Sign In
-                </Button>
-              </Box>
-            </form>
-          </Box>
+                  Sign Up
+                </span>
+              </p>
+            </Box>
+
+            {/* Hover Effect */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                zIndex: 1,
+                opacity: 0,
+                transition: "opacity 0.3s ease-in-out",
+                "&:hover": {
+                  opacity: 1,
+                },
+              }}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6} sx={{ position: "relative" }}>
-          <img
-            src={sign_in}
-            alt="Sign-In Visual"
-            className="img-fluid rounded"
-            style={{ width: "100%", height: "90vh", objectFit: "cover" }}
-          />
-          <Box sx={{ position: "absolute", bottom: 20, left: 20, color: "white" }}>
-            <h1>Welcome to Sign_In</h1>
-            <p>
-              Don't have an account?{" "}
-              <Link to="/sign_up" style={{ color: "white" }}>
-                Sign Up
-              </Link>
-            </p>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -6,6 +6,7 @@ const {
   updateAddress,
   deleteAddress,
   getImage,
+  getAllAddressesWithCategories
 } = require("../Controller/addressController");
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router.get("/all", getAllAddresses);
 
 // Get addresses by filters
 router.get("/filter", getAddressByFilters);
+router.get("/get-all-addresses-with-packages", getAllAddressesWithCategories);
 
 // Update an address by ID
 router.put("/update/:id", updateAddress);

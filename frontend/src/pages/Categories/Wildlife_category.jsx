@@ -1,26 +1,18 @@
-import React ,{useState}from 'react';
+import React from 'react';
 import StateCard from './Statecard/StateCard';
-import CityView from './CityCard/CityView';
-import { useNavigate } from 'react-router-dom';
 
-const Honeymoon_category = ({honeymoonData}) => {
-  const [selectedState, setSelectedState] = useState(null);
-  const navigate=useNavigate();
-    if (!honeymoonData || Object.keys(honeymoonData).length === 0) {
-        return <div className="text-center">No Honeymoon Destinations Available</div>;
+const Wildlife_category = ({wildlifeData}) => {
+    if (!wildlifeData || Object.keys(wildlifeData).length === 0) {
+        return <div className="text-center">No Wildlife Destinations Available</div>;
       }
-      // if (selectedState) {
-      //   // return <CityView stateName={selectedState} />;
-      //   navigate('/city-view');
-      // }
     
       return (
         <div className="container mt-5">
-          <h2 className="text-center mb-4">HONEYMOON DESTINATIONS</h2>
+          <h2 className="text-center mb-4">PILGRIMAGE DESTINATIONS</h2>
           <div className="row">
-            {Object.keys(honeymoonData).map((state, index) => {
-              const stateDetails = honeymoonData[state]?.stateDetails || {};
-              const cityDetails = honeymoonData[state]?.cities || {};
+            {Object.keys(wildlifeData).map((state, index) => {
+              const stateDetails = wildlifeData[state]?.stateDetails || {};
+              const cityDetails = wildlifeData[state]?.cities || {};
     
               // Extract stateName and fileName from the stateImage path
               const stateImagePath = stateDetails.stateImage || "";
@@ -31,7 +23,7 @@ const Honeymoon_category = ({honeymoonData}) => {
     
               // Validate and extract stateName and fileName from the path
               if (parts.length >= 3) {
-                stateName = parts[2]; // Extract "pondicherry" from the path
+                stateName = parts[2]; // Extract "pilgrimage_name" from the path
                 fileName = parts.pop(); // Extract the file name
               } else {
                 console.warn("Unexpected stateImage format:", stateImagePath);
@@ -53,13 +45,13 @@ const Honeymoon_category = ({honeymoonData}) => {
                     startingPrice={stateDetails.startingPrice}
                     cityCount={Object.keys(cityDetails).length}
                     packageName={firstPackage}
-                    onClick={setSelectedState}
                   />
                 </div>
               );
             })}
           </div>
-        </div>)
+        </div>
+      );
 }
 
-export default Honeymoon_category;
+export default Wildlife_category;

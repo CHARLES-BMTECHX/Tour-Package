@@ -3,10 +3,12 @@ const {
   createPackage,
   getAllPackages,
   getPackageById,
+  getCitiesByState,
   updatePackage,
   deletePackage,
   getImage,
   getFilteredPackages,
+  getTopDestinationPackagesGroupedByState
 } = require('../Controller/packageController');
 const upload = require('../Middleware/uploadMiddleware'); // Import upload middleware
 
@@ -23,9 +25,13 @@ router.get('/get-packages-by-categories', getFilteredPackages);
 
 // **GET**: Retrieve an image
 router.get('/get-package-image', getImage);
+// **GET**: Retrieve an city by state
+router.get('/cities-by-state/:stateName', getCitiesByState);
+
 
 // **GET**: Retrieve a package by ID (dynamic route)
 router.get('/get-package-by-id/:id', getPackageById);
+router.get('/get-top-destinations-by-state', getTopDestinationPackagesGroupedByState);
 
 // **PUT**: Update a package by ID
 router.put('/update-package/:id', upload.any(), updatePackage); // Allow updating with images
